@@ -416,30 +416,13 @@ function encodeShareState(state) {
 
 /* ============================================================
    GENERATE SHARE URL
-   IMPORTANT:
-   Uses current subdomain + current page automatically
    ============================================================ */
 
 function shareUrl(state) {
 
-  /*
-     Example:
+  const url = new URL(window.location.href);
 
-     Current page:
-     https://feeling-world.studentaimentor.com/birthday.html
-
-     Generated link:
-     https://feeling-world.studentaimentor.com/birthday.html#s=DATA
-  */
-
-
-  const baseUrl =
-    window.location.origin +
-    window.location.pathname;
-
-
-  const url =
-    new URL(baseUrl);
+  url.search = '';
 
 
   url.hash =
