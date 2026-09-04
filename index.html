@@ -3,13 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>surpriseme — Craft Unforgettable Interactive Surprises</title>
+<title>Surprise Me — Craft Unforgettable Interactive Surprises</title>
 <link rel="stylesheet" href="assets/style.css">
+<link rel="shortcut icon" href="Brand_logo.png" type="image/x-icon">
+<script src="assets/app.js"></script>
 </head>
 <body>
 
 <header class="site-header">
-  <a href="index.html" class="brand">✦ surpriseme</a>
+  <a href="index.html" class="brand">✦ Surprise Me</a>
   <nav class="site-nav" id="siteNav">
     <a href="proposal.html">Proposal</a>
     <a href="birthday.html">Birthday</a>
@@ -18,22 +20,49 @@
     <a href="#testimonials">Testimonials</a>
     <a href="proposal.html" class="nav-cta">Start creating</a>
   </nav>
-  <button class="nav-toggle" id="navToggle"></button>
+  <div class="setting">
+    <div class="theme-switcher-wrap" aria-label="Theme preferences">
+      <div class="theme-switcher" id="homeThemeSwitcher"></div>
+    </div>
+  <button class="nav-toggle" id="navToggle"><span></span></button>
+  </div>
 </header>
 
 <section class="hero">
-  <div class="hero-eyebrow">Personalized digital surprises</div>
-  <h1>Craft unforgettable <em>interactive surprises.</em></h1>
-  <p class="lead">Go beyond a regular message. Turn your proposal, birthday wish or apology into a playful, animated experience they open right on their phone.</p>
-  <div class="hero-ctas">
-    <a href="proposal.html" class="btn primary">💍 The Perfect Proposal</a>
-    <a href="birthday.html" class="btn outline">🎂 Birthday Surprise</a>
-    <a href="sorry.html" class="btn outline">🙏 Sorry Card</a>
-  </div>
-  <div class="hero-visual">
-    <div class="float-chip">💍 "Will you marry me?" — unrejectable</div>
-    <div class="float-chip">🎈 Pop balloons, blow the candle</div>
-    <div class="float-chip">🔒 Optional password lock</div>
+  <div class="hero-shell">
+    <div class="hero-content">
+      <div class="hero-copy">
+        <div class="hero-eyebrow">✦ Personalized digital surprises</div>
+        <h1>Make the moment feel <em>unforgettable.</em></h1>
+        <p class="lead">From romantic proposals to birthday magic and heartfelt apologies, Surprise Me turns a simple message into a cute, cinematic experience they’ll actually remember.</p>
+        <div class="hero-ctas">
+          <a href="proposal.html" class="btn primary">💍 The Perfect Proposal</a>
+          <a href="birthday.html" class="btn outline">🎂 Birthday Surprise</a>
+          <a href="sorry.html" class="btn outline">🙏 Sorry Card</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-panel">
+          <div class="preview-card">
+            <div class="preview-badge">Featured surprise</div>
+            <h3>Will you marry me?</h3>
+            <p>Build a playful, emotional reveal with a custom message, password lock, and the kind of mini-interaction that feels personal.</p>
+            <div class="preview-actions">
+              <span class="small-btn">Heartfelt</span>
+              <span class="small-btn">Interactive</span>
+              <span class="small-btn">Private</span>
+            </div>
+            <div class="preview-mock">
+              <div class="mini-bubble large">✨ “Yes, always.”</div>
+              <div class="mini-bubble">💍 Open surprise</div>
+            </div>
+          </div>
+        </div>
+        <div class="float-chip">💍 Unrejectable</div>
+        <div class="float-chip">🎈 Tiny moments, huge emotion</div>
+        <div class="float-chip">🔒 Private & personal</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -61,6 +90,26 @@
       <p>Say sorry the sweet way. A gentle, playful apology experience that ends in forgiveness — no awkward face-to-face needed.</p>
       <span class="cat-link">Create now →</span>
     </a>
+  </div>
+</section>
+
+<section class="section" id="stats">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number">4</div>
+      <div class="stat-label">signature themes</div>
+      <p>Choose a mood that matches your story, from soft romance to bold luxury.</p>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">3x</div>
+      <div class="stat-label">more memorable than a plain text</div>
+      <p>Every surprise is built to feel personal, playful, and hard to forget.</p>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">100%</div>
+      <div class="stat-label">customizable</div>
+      <p>Write your own question, name, message, icon, and private lock.</p>
+    </div>
   </div>
 </section>
 
@@ -112,7 +161,7 @@
 <footer class="site-footer">
   <div class="footer-grid">
     <div class="footer-col">
-      <h4>surpriseme</h4>
+      <h4>Surprise Me</h4>
       <p>Personalized, interactive digital surprises for the people you love — crafted in minutes, remembered for years.</p>
     </div>
     <div class="footer-col">
@@ -127,11 +176,25 @@
       <a href="#testimonials">Testimonials</a>
     </div>
   </div>
-  <div class="footer-bottom">© 2026 surpriseme. Made for the moments that matter.</div>
+  <div class="footer-bottom">© 2026 Surprise Me. Made for the moments that matter. Developer: Ehsan_techs</div>
 </footer>
 
 <script>
-document.getElementById('navToggle').addEventListener('click', ()=>{
+const homeThemeSwitcher = document.getElementById('homeThemeSwitcher');
+
+function renderHomeThemeSwitcher() {
+  const activeTheme = getPreferredTheme();
+  applyTheme(activeTheme);
+  renderColorDropdown(homeThemeSwitcher, activeTheme, (selectedTheme) => {
+    if (!selectedTheme) return;
+    applyTheme(selectedTheme);
+    renderHomeThemeSwitcher();
+  });
+}
+
+renderHomeThemeSwitcher();
+
+document.getElementById('navToggle').addEventListener('click', () => {
   document.getElementById('siteNav').classList.toggle('open');
 });
 </script>

@@ -29,6 +29,7 @@ const THEMES = [
   }
 ];
 
+const THEME_STORAGE_KEY = 'surpriseme-theme';
 
 const reducedMotion = window.matchMedia(
   '(prefers-reduced-motion: reduce)'
@@ -40,8 +41,24 @@ const reducedMotion = window.matchMedia(
    ============================================================ */
 
 function applyTheme(key) {
-  document.documentElement.setAttribute('data-theme', key);
-  return key;
+  const safeKey = THEMES.some(t => t.key === key) ? key : 'pink';
+  document.documentElement.setAttribute('data-theme', safeKey);
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, safeKey);
+  } catch (error) {
+    console.warn('Unable to persist theme preference:', error);
+  }
+  return safeKey;
+}
+
+function getPreferredTheme() {
+  try {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved && THEMES.some(t => t.key === saved)) return saved;
+  } catch (error) {
+    console.warn('Unable to read theme preference:', error);
+  }
+  return 'pink';
 }
 
 
@@ -49,15 +66,15 @@ function renderSwitcher(container, activeKey, onPick) {
 
   if (!container) return;
 
-  container.innerHTML = THEMES.map(t =>
-
-    `<div
+  container.innerHTML = THEMES.map(t => `
+    <button
+      type="button"
       class="swatch sw-${t.key} ${activeKey === t.key ? 'active' : ''}"
       data-theme-key="${t.key}"
-      title="${t.name}">
-    </div>`
-
-  ).join('');
+      title="${t.name}"
+      aria-label="Select ${t.name} theme"
+    ></button>
+  `).join('');
 
 
   container.querySelectorAll('.swatch').forEach(el => {
@@ -72,6 +89,46 @@ function renderSwitcher(container, activeKey, onPick) {
 
   });
 
+}
+
+function renderColorDropdown(container, activeKey, onPick) {
+  if (!container) return;
+
+  container.classList.add('color-dropdown');
+  container.innerHTML = `
+    <button type="button" class="color-dropdown-trigger" aria-label="Change theme color" aria-expanded="false">
+      <span class="swatch sw-${activeKey}" aria-hidden="true"></span>
+    </button>
+    <div class="color-dropdown-menu" role="menu" hidden>
+      ${THEMES.map(theme => `
+        <button type="button" class="swatch sw-${theme.key} ${activeKey === theme.key ? 'active' : ''}" data-theme-key="${theme.key}" title="${theme.name}" aria-label="Select ${theme.name} theme" role="menuitem"></button>
+      `).join('')}
+    </div>
+  `;
+
+  const trigger = container.querySelector('.color-dropdown-trigger');
+  const menu = container.querySelector('.color-dropdown-menu');
+
+  trigger.addEventListener('click', () => {
+    const isOpen = !menu.hidden;
+    menu.hidden = isOpen;
+    trigger.setAttribute('aria-expanded', String(!isOpen));
+    container.classList.toggle('open', !isOpen);
+  });
+
+  menu.querySelectorAll('[data-theme-key]').forEach(option => {
+    option.addEventListener('click', () => {
+      onPick(option.getAttribute('data-theme-key'));
+    });
+  });
+
+  document.addEventListener('click', event => {
+    if (!container.contains(event.target)) {
+      menu.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      container.classList.remove('open');
+    }
+  });
 }
 
 

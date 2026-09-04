@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sorry Card — surpriseme</title>
+<title>Sorry Card — Surprise Me</title>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body class="app-page">
 
-<div class="mini-nav"><a href="index.html">← surpriseme</a></div>
+<div class="mini-nav"><a href="index.html">← Surprise Me</a></div>
 <div class="ambient" id="ambient"></div>
 
 <div class="app">
@@ -18,8 +18,6 @@
     <div class="stage" id="stage"></div>
   </div>
 </div>
-
-<button class="editor-toggle" id="editorToggle" style="display:none">◀ Back to editor</button>
 
 <script src="assets/app.js"></script>
 <script>
@@ -156,18 +154,11 @@ function attachCreator(s){
 /* ===== recipient flow ===== */
 function startRecipientPreview(){
   state.mode='recipient';
-  document.getElementById('editorToggle').style.display='block';
+  document.body.classList.add('recipient-mode');
   document.getElementById('themeSwitcher').style.display='none';
   renderProgress();
   goRecipient(state.passwordEnabled?'lock':'intro');
 }
-document.getElementById('editorToggle').addEventListener('click', ()=>{
-  state.mode='creator';
-  document.getElementById('editorToggle').style.display='none';
-  document.getElementById('themeSwitcher').style.display='flex';
-  renderProgress();
-  goToStep(CREATOR_STEPS.indexOf('review'));
-});
 
 function goRecipient(name){
   const map = { lock:[recipientLock, attachLock], intro:[recipientIntro, attachIntro], reason:[recipientReason, attachReason], forgive:[recipientForgive, attachForgive], celebration:[recipientCelebration, attachCelebration] };
@@ -215,7 +206,7 @@ function attachForgive(){
 function recipientCelebration(){
   return `<div class="step-body recipient"><h2 class="celeb-title">You forgave them 🤍</h2><p class="sub">Here's the rest of what they wanted to say.</p>
   <div class="letter-box"><div class="letter-label">A note for you</div><div id="letterText"></div></div>
-  <div class="footer-note">✦ Made with surpriseme — <a id="makeOwn">create your own surprise</a></div>
+  <div class="footer-note">✦ Made with Surprise Me — <a id="makeOwn">create your own surprise</a> · Developer: Ehsan_techs</div>
   <div style="margin-top:10px;"><span class="btn ghost" id="replayBtn">Replay</span></div></div>`;
 }
 function attachCelebration(){
