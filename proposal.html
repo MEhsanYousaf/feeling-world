@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="pink">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Perfect Proposal — Sweetly</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="app-page">
+
+<div class="mini-nav"><a href="index.html">← Sweetly</a></div>
+<div class="ambient" id="ambient"></div>
+
+<div class="app">
+  <div class="switcher" id="themeSwitcher"></div>
+  <div class="stage-wrap">
+    <div class="progress" id="progress"></div>
+    <div class="stage" id="stage"></div>
+  </div>
+</div>
+
+<button class="editor-toggle" id="editorToggle" style="display:none">◀ Back to editor</button>
+
+<script src="assets/app.js"></script>
+<script>
+const state = { theme:'pink', name:'', question:'', message:'', icon:'💍', passwordEnabled:false, password:'', passwordShowField:false, step:0, mode:'creator' };
+
+const QUESTIONS = [
+  {v:'Will you marry me?', l:'Will you marry me?', e:'💍'},
+  {v:'Will you be my girlfriend?', l:'Will you be my girlfriend?', e:'💕'},
+  {v:'Will you be my boyfriend?', l:'Will you be my boyfriend?', e:'💙'},
+  {v:'Will you be my Valentine?', l:'Will you be my Valentine?', e:'🌹'},
+  {v:'__custom__', l:'Write my own question', e:'✍️'}
+];
+const ICONS = ['💍','💕','🌹','🎉','✨','💌'];
+const TEASE = ["Nice try 😏","Not so fast...","Almost had it!","'No' is feeling shy","Catch me if you can!","Try again 😂","So close!","Nope — dodge!","Getting warmer to YES 😉","Was that a yes? No? Try again"];
+
+const CREATOR_STEPS = ['theme','name','question','message','icon','lock','review'];
+const stageEl = document.getElementById('stage');
+const ambientEl = document.getElementById('ambient');
+
+function setTheme(key){ state.theme = applyTheme(key); renderSwitcher(document.getElementById('themeSwitcher'), state.theme, setTheme); }
+function renderProgress(){
+  const p = document.getElementById('progress');
+  if(state.mode!=='creator'){ p.style.display='none'; return; }
+  p.style.display='flex';
+  p.innerHTML = CREATOR_STEPS.map((s,i)=>`<div class="dot ${i<=state.step?'on':''}"></div>`).join('');
+}
+function goToStep(i){ state.step=i; renderProgress(); renderCreator(); }
+function selectAndAdvance(setter, delay){ setter(); setTimeout(()=> goToStep(state.step+1), delay ?? (reducedMotion?0:280)); }
+
+function renderCreator(){
+  const s = CREATOR_STEPS[state.step];
+  const map = { theme:stepTheme, name:stepName, question:stepQuestion, message:stepMessage, icon:stepIcon, lock:stepLock, review:stepReview };
+  setStage(stageEl, map[s](), ()=> attachCreator(s));
+}
+
+function stepTheme(){
+  return `<div class="step-body"><div class="eyebrow">Step 1 of 7</div><h2>Pick a style</h2><p class="sub">Choose the mood for your proposal. You can change this anytime.</p>
+  <div class="grid cols-2">${THEMES.map(t=>`<div class="opt theme-card ${state.theme===t.key?'selected':''}" data-theme-pick="${t.key}"><div class="theme-preview tp-${t.key}"></div><div class="theme-label"><div class="opt-title">${t.name}</div><div class="opt-sub">${t.tagline}</div></div></div>`).join('')}</div></div>`;
+}
+function stepName(){
+  return `<div class="step-body"><div class="eyebrow">Step 2 of 7</div><h2>Who is this for?</h2><p class="sub">Their name will appear inside the proposal.</p>
+  <input type="text" id="nameInput" placeholder="e.g. Ayesha" value="${state.name}">
+  <div class="step-actions"><button class="btn primary" id="nameContinue" ${state.name.trim()?'':'disabled'}>Continue →</button></div></div>`;
+}
+function stepQuestion(){
+  return `<div class="step-body"><div class="eyebrow">Step 3 of 7</div><h2>What's the big question?</h2><p class="sub">Pick one, or write your own.</p>
+  <div class="grid" id="qList">${QUESTIONS.map(q=>`<div class="opt" data-q="${q.v}"><span class="opt-title">${q.e} ${q.l}</span></div>`).join('')}</div>
+  <div id="customWrap" style="display:none; margin-top:14px;"><input type="text" id="customQ" placeholder="Type your question..."><button class="btn primary" id="customContinue" disabled>Continue →</button></div></div>`;
+}
+function stepMessage(){
+  return `<div class="step-body"><div class="eyebrow">Step 4 of 7</div><h2>Write them a little note</h2><p class="sub">This appears after they say YES. Straight from the heart.</p>
+  <textarea id="msgInput" placeholder="Every moment with you feels like a page from my favourite story...">${state.message}</textarea>
+  <div class="step-actions" style="display:flex; align-items:center; gap:14px;"><button class="btn primary" id="msgContinue">Continue →</button><span class="btn ghost" id="msgSkip">Skip for now</span></div></div>`;
+}
+function stepIcon(){
+  return `<div class="step-body"><div class="eyebrow">Step 5 of 7</div><h2>Choose a symbol</h2><p class="sub">This little icon opens the surprise.</p>
+  <div class="grid cols-3">${ICONS.map(ic=>`<div class="opt ${state.icon===ic?'selected':''}" data-icon="${ic}" style="text-align:center; font-size:26px; padding:18px 0;">${ic}</div>`).join('')}</div></div>`;
+}
+function stepLock(){
+  if(!state.passwordShowField){
+    return `<div class="step-body"><div class="eyebrow">Step 6 of 7</div><h2>Add a lock?</h2><p class="sub">Optional — protect the final surprise with a password only they know.</p>
+    <div class="grid"><div class="opt" data-lock="yes"><span class="opt-title">🔒 Yes, add a password</span></div><div class="opt" data-lock="no"><span class="opt-title">🔓 No, keep it open</span></div></div></div>`;
+  }
+  return `<div class="step-body"><div class="eyebrow">Step 6 of 7</div><h2>Set a password</h2><p class="sub">They'll need to enter this before opening the surprise.</p>
+  <input type="text" id="pwInput" placeholder="e.g. ourfirstdate" value="${state.password}">
+  <div class="step-actions"><button class="btn primary" id="pwContinue" ${state.password.trim()?'':'disabled'}>Continue →</button></div></div>`;
+}
+function stepReview(){
+  return `<div class="step-body"><div class="eyebrow">Step 7 of 7</div><h2>Ready to send</h2><p class="sub">Here's your surprise, all wrapped up.</p>
+  <div class="review-card">
+    <div class="review-row"><span>Style</span><span>${THEMES.find(t=>t.key===state.theme).name}</span></div>
+    <div class="review-row"><span>For</span><span>${state.name||'—'}</span></div>
+    <div class="review-row"><span>Question</span><span>${state.question||'—'}</span></div>
+    <div class="review-row"><span>Note</span><span>${state.message? (state.message.length>28? state.message.slice(0,28)+'…':state.message) : '(default message)'}</span></div>
+    <div class="review-row"><span>Lock</span><span>${state.passwordEnabled?'🔒 Enabled':'🔓 Open'}</span></div>
+  </div>
+  <div class="share-box"><code id="shareLink">Create your private link</code><button class="copy-btn" id="copyLink">Create link</button></div>
+  <div class="step-actions"><button class="btn primary" id="previewBtn" style="width:100%;">▶ Preview as ${state.name||'them'}</button>
+  <div style="text-align:center; margin-top:12px;"><span class="btn ghost" id="editAgain">Edit details</span></div></div></div>`;
+}
+
+function attachCreator(s){
+  if(s==='theme'){
+    document.querySelectorAll('[data-theme-pick]').forEach(el=> el.addEventListener('click', ()=>{ setTheme(el.getAttribute('data-theme-pick')); selectAndAdvance(()=>{}); }));
+  }
+  if(s==='name'){
+    const input=document.getElementById('nameInput'), btn=document.getElementById('nameContinue');
+    input.addEventListener('input', ()=> btn.disabled=!input.value.trim());
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter'&&input.value.trim()) btn.click(); });
+    btn.addEventListener('click', ()=>{ state.name=input.value.trim(); goToStep(state.step+1); });
+  }
+  if(s==='question'){
+    document.querySelectorAll('[data-q]').forEach(el=> el.addEventListener('click', ()=>{
+      const v = el.getAttribute('data-q');
+      if(v==='__custom__'){
+        document.getElementById('customWrap').style.display='block';
+        const ci=document.getElementById('customQ'), cb=document.getElementById('customContinue');
+        ci.focus();
+        ci.addEventListener('input', ()=> cb.disabled=!ci.value.trim());
+        ci.addEventListener('keydown', e=>{ if(e.key==='Enter'&&ci.value.trim()) cb.click(); });
+        cb.addEventListener('click', ()=> selectAndAdvance(()=>{ state.question=ci.value.trim(); }, 0));
+        return;
+      }
+      selectAndAdvance(()=>{ state.question=v; });
+    }));
+  }
+  if(s==='message'){
+    const ta=document.getElementById('msgInput');
+    document.getElementById('msgContinue').addEventListener('click', ()=>{ state.message=ta.value.trim(); goToStep(state.step+1); });
+    document.getElementById('msgSkip').addEventListener('click', ()=>{ state.message=''; goToStep(state.step+1); });
+  }
+  if(s==='icon'){
+    document.querySelectorAll('[data-icon]').forEach(el=> el.addEventListener('click', ()=> selectAndAdvance(()=>{ state.icon=el.getAttribute('data-icon'); })));
+  }
+  if(s==='lock'){
+    if(!state.passwordShowField){
+      document.querySelectorAll('[data-lock]').forEach(el=> el.addEventListener('click', ()=>{
+        const v=el.getAttribute('data-lock');
+        if(v==='no'){ state.passwordEnabled=false; selectAndAdvance(()=>{}); }
+        else { state.passwordShowField=true; renderCreator(); }
+      }));
+    } else {
+      const pw=document.getElementById('pwInput'), btn=document.getElementById('pwContinue');
+      pw.addEventListener('input', ()=> btn.disabled=!pw.value.trim());
+      pw.addEventListener('keydown', e=>{ if(e.key==='Enter'&&pw.value.trim()) btn.click(); });
+      btn.addEventListener('click', ()=>{ state.password=pw.value.trim(); state.passwordEnabled=true; state.passwordShowField=false; goToStep(state.step+1); });
+    }
+  }
+  if(s==='review'){
+    document.getElementById('previewBtn').addEventListener('click', startRecipientPreview);
+    document.getElementById('editAgain').addEventListener('click', ()=> goToStep(0));
+    document.getElementById('copyLink').addEventListener('click', (e)=> createShareLink(state, e.target, document.getElementById('shareLink')));
+  }
+}
+
+/* ===== recipient flow ===== */
+function startRecipientPreview(){
+  state.mode='recipient';
+  document.getElementById('editorToggle').style.display='block';
+  renderSwitcher(document.getElementById('themeSwitcher'), state.theme, setTheme);
+  document.getElementById('themeSwitcher').style.display='none';
+  renderProgress();
+  goRecipient(state.passwordEnabled?'lock':'intro');
+}
+document.getElementById('editorToggle').addEventListener('click', ()=>{
+  state.mode='creator';
+  document.getElementById('editorToggle').style.display='none';
+  document.getElementById('themeSwitcher').style.display='flex';
+  renderProgress();
+  goToStep(CREATOR_STEPS.indexOf('review'));
+});
+
+function goRecipient(name){
+  const map = { lock:[recipientLock, attachLock], intro:[recipientIntro, attachIntro], question:[recipientQuestion, attachQuestion], celebration:[recipientCelebration, attachCelebration] };
+  const [html, attach] = map[name];
+  setStage(stageEl, html(), attach);
+}
+
+function recipientLock(){
+  return `<div class="step-body recipient"><div class="lock-emoji">🔒</div><h2 style="font-size:24px;">This surprise is locked</h2><p class="sub">Enter the password to open it.</p>
+  <div class="lock-wrap"><input type="password" id="unlockInput" placeholder="Password"><div class="error-text" id="unlockError"></div><button class="btn primary" id="unlockBtn" style="width:100%;">Unlock ✨</button></div></div>`;
+}
+function attachLock(){
+  const input=document.getElementById('unlockInput'), err=document.getElementById('unlockError'), wrap=document.querySelector('.lock-wrap'), btn=document.getElementById('unlockBtn');
+  function tryUnlock(){
+    if(input.value===state.password) goRecipient('intro');
+    else { err.textContent='Not quite — try again 💭'; wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake'); }
+  }
+  btn.addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+}
+function recipientIntro(){
+  return `<div class="step-body recipient"><div class="r-icon">${state.icon}</div><h2 style="font-size:24px;">You have a surprise waiting</h2><p class="sub">Someone has something to ask you.</p><button class="tap-btn" id="openBtn">Tap to open</button></div>`;
+}
+function attachIntro(){ document.getElementById('openBtn').addEventListener('click', ()=> goRecipient('question')); }
+function recipientQuestion(){
+  return `<div class="step-body recipient"><div class="r-icon" style="font-size:38px;">${state.icon}</div>
+  <div class="q-name">${state.name?state.name+', ':''}${state.question||'will you say yes?'}</div>
+  <div class="q-buttons" id="qButtons"><button class="btn primary yes" id="yesBtn">YES ❤️</button><button class="btn no" id="noBtn">NO 😏</button></div>
+  <div class="q-caption" id="qCaption">&nbsp;</div></div>`;
+}
+function attachQuestion(){
+  const container=document.getElementById('qButtons'), noBtn=document.getElementById('noBtn'), yesBtn=document.getElementById('yesBtn'), caption=document.getElementById('qCaption');
+  attachDodge(noBtn, container, caption, TEASE);
+  yesBtn.addEventListener('click', ()=> goRecipient('celebration'));
+}
+function recipientCelebration(){
+  return `<div class="step-body recipient"><h2 class="celeb-title">You said YES! 🎉</h2><p class="sub">Here's something they wanted you to know.</p>
+  <div class="letter-box"><div class="letter-label">A note for you</div><div id="letterText"></div></div>
+  <div class="footer-note">✦ Made with Sweetly — <a id="makeOwn">create your own surprise</a></div>
+  <div style="margin-top:10px;"><span class="btn ghost" id="replayBtn">Replay</span></div></div>`;
+}
+function attachCelebration(){
+  burstConfetti(state.theme);
+  document.getElementById('replayBtn').addEventListener('click', ()=> goRecipient(state.passwordEnabled?'lock':'intro'));
+  document.getElementById('makeOwn').addEventListener('click', ()=>{ window.location.href='index.html'; });
+  const msg = state.message && state.message.trim() ? state.message.trim() : 'You just made my whole life. This means more to me than words can hold. 💗';
+  typewriter(document.getElementById('letterText'), msg);
+}
+
+/* init */
+(async()=>{
+  const shared = loadSharedState(state) || await loadRemoteState(state);
+  setTheme(state.theme);
+  renderSwitcher(document.getElementById('themeSwitcher'), state.theme, setTheme);
+  startAmbient(()=>state.theme, ambientEl);
+  renderProgress();
+  if(shared) startRecipientPreview();
+  else renderCreator();
+})();
+</script>
+</body>
+</html>
