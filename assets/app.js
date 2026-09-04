@@ -88,19 +88,24 @@ async function createShareLink(state, btnEl, codeEl){
   btnEl.disabled = true;
   btnEl.textContent = 'Creating...';
   try{
-    const response = await fetch('/.netlify/functions/create-surprise', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({theme:state.theme, name:state.name, message:state.message,
-        icon:state.icon, password:state.passwordEnabled ? state.password : '',
-        question:state.question || '', reason:state.reason || ''})
-    });
-    if(!response.ok) throw new Error('create failed');
-    const {id} = await response.json();
-    const url = new URL(window.location.href);
-    url.hash = '';
-    url.search = 's=' + id;
+    let url;
+    try{
+      const response = await fetch('/.netlify/functions/create-surprise', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({theme:state.theme, name:state.name, message:state.message,
+          icon:state.icon, password:state.passwordEnabled ? state.password : '',
+          question:state.question || '', reason:state.reason || ''})
+      });
+      if(!response.ok) throw new Error('create failed');
+      const {id} = await response.json();
+      url = new URL(window.location.href);
+      url.search = 's=' + id;
+      url.hash = '';
+    } catch(error){
+      url = new URL(shareUrl(state));
+    }
     codeEl.textContent = url.toString();
-    await navigator.clipboard.writeText(url.toString());
+    if(navigator.clipboard) await navigator.clipboard.writeText(url.toString()).catch(()=>{});
     btnEl.textContent = 'Copied!';
   } catch(error){
     btnEl.textContent = 'Try again';
