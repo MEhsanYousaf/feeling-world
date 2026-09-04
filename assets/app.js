@@ -88,22 +88,7 @@ async function createShareLink(state, btnEl, codeEl){
   btnEl.disabled = true;
   btnEl.textContent = 'Creating...';
   try{
-    let url;
-    try{
-      const response = await fetch('/.netlify/functions/create-surprise', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({theme:state.theme, name:state.name, message:state.message,
-          icon:state.icon, password:state.passwordEnabled ? state.password : '',
-          question:state.question || '', reason:state.reason || ''})
-      });
-      if(!response.ok) throw new Error('create failed');
-      const {id} = await response.json();
-      url = new URL(window.location.href);
-      url.search = 's=' + id;
-      url.hash = '';
-    } catch(error){
-      url = new URL(shareUrl(state));
-    }
+    const url = new URL(shareUrl(state));
     codeEl.textContent = url.toString();
     if(navigator.clipboard) await navigator.clipboard.writeText(url.toString()).catch(()=>{});
     btnEl.textContent = 'Copied!';
@@ -142,21 +127,6 @@ function loadSharedState(state){
       passwordEnabled: Boolean(data[4]), question: data[5] || '', reason: data[6] || '',
       mode:'recipient', step:0, passwordShowField:false
     });
-    return true;
-  } catch(error){
-    return false;
-  }
-}
-
-async function loadRemoteState(state){
-  const id = new URL(window.location.href).searchParams.get('s');
-  if(!id) return false;
-  try{
-    const response = await fetch('/.netlify/functions/get-surprise?id=' + encodeURIComponent(id));
-    if(!response.ok) return false;
-    const saved = await response.json();
-    Object.assign(state, saved, {mode:'recipient', step:0, passwordShowField:false,
-      passwordEnabled:Boolean(saved.password)});
     return true;
   } catch(error){
     return false;

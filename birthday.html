@@ -219,7 +219,7 @@ function attachCelebration(){
 
 /* init */
 (async()=>{
-  const shared = loadSharedState(state) || await loadRemoteState(state);
+  const shared = loadSharedState(state);
   setTheme(state.theme);
   renderSwitcher(document.getElementById('themeSwitcher'), state.theme, setTheme);
   startAmbient(()=>state.theme, ambientEl);
