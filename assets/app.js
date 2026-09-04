@@ -1,5 +1,5 @@
 /* ============================================================
-   Sweetly — shared engine used by proposal.html / birthday.html / sorry.html
+   surpriseme — shared engine used by proposal.html / birthday.html / sorry.html
    ============================================================ */
 
 const THEMES = [
